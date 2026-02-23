@@ -64,13 +64,11 @@ Target guidance from release strategy:
 - TTFP median target: `<= 5000ms` (stretch `<= 3500ms`)
 - Restart latency target: `<= 400ms`
 
-## QA contribution guardrail
+## Contribution roles and guardrails
 
-QA contributors should file findings as GitHub issues only.
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the agent role matrix and PR/review policy.
 
-- Do **not** push QA report files (for example `QA_REPORT.md`) to `main`.
-- Do **not** push QA fix/code commits from QA-role runs.
-- Link evidence, repro steps, and expected behavior in issues so implementation can be tracked and reviewed.
+Key rule: **QA files issues only** (no QA report/code pushes to `main`).
 
 ## GitHub Pages deployment (root)
 
