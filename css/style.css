@@ -1,0 +1,190 @@
+:root {
+  --bg: #0e1116;
+  --surface: #141923;
+  --surface-elev: #1a2030;
+  --text-primary: #f5f7fa;
+  --text-secondary: #a9b2c3;
+  --accent: #d4af37;
+  --accent-soft: #8c7640;
+  --success: #70d6a7;
+  --danger: #ff6b6b;
+  --grid-line: rgba(255, 255, 255, 0.05);
+  --focus-ring: #9cc9ff;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --shadow-soft: 0 6px 24px rgba(0, 0, 0, 0.28);
+  --dur-fast: 140ms;
+  --dur-med: 240ms;
+  --ease-lux: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100svh;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: radial-gradient(circle at top, #181f2e 0%, var(--bg) 50%);
+  color: var(--text-primary);
+}
+
+.app {
+  width: min(100vw - 24px, 980px);
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: max(var(--space-3), env(safe-area-inset-top)) var(--space-3) max(var(--space-3), env(safe-area-inset-bottom));
+  display: grid;
+  align-content: center;
+  gap: var(--space-4);
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.metric {
+  background: color-mix(in srgb, var(--surface-elev) 88%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  box-shadow: var(--shadow-soft);
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.value {
+  font-size: clamp(18px, 2.8vw, 24px);
+  font-weight: 600;
+}
+
+.metric-state .value { color: var(--accent); }
+
+.board-wrap {
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: min(86vh, 100%);
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  overflow: hidden;
+  touch-action: none;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  background: color-mix(in srgb, var(--surface) 74%, #000 26%);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux);
+}
+
+.overlay.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.overlay h1 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 36px);
+  line-height: 1.05;
+}
+
+.overlay p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.overlay-actions { display: flex; gap: var(--space-2); justify-content: center; flex-wrap: wrap; }
+
+button {
+  min-width: 132px;
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, #fff 10%);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 var(--space-4);
+  cursor: pointer;
+  transition: transform var(--dur-fast) ease-out, background var(--dur-fast) ease-out;
+}
+
+button.ghost {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: transparent;
+}
+
+button:hover { transform: translateY(-1px); }
+button:active { transform: translateY(0); }
+button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.touch-hint {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 640px) {
+  .app { width: 100%; }
+  .hud { grid-template-columns: 1fr 1fr; }
+  .metric-state { grid-column: 1 / -1; }
+  .board-wrap { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition-duration: 120ms !important; }
+  .overlay { transform: none; }
+  button:hover, button:active { transform: none; }
+}

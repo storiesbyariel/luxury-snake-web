@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Luxury Snake</title>
+    <meta name="description" content="A premium minimal Snake game for the web." />
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <main class="app" aria-label="Luxury Snake game">
+      <header class="hud" aria-label="Game status">
+        <div class="metric">
+          <span class="label">Score</span>
+          <span class="value" id="score">0</span>
+        </div>
+        <div class="metric">
+          <span class="label">Best</span>
+          <span class="value" id="best">0</span>
+        </div>
+        <div class="metric metric-state">
+          <span class="label">State</span>
+          <span class="value" id="state">Ready</span>
+        </div>
+      </header>
+
+      <section class="board-wrap" id="boardWrap" aria-label="Game board">
+        <canvas id="gameCanvas" width="640" height="640" aria-label="Snake game canvas"></canvas>
+
+        <div class="overlay is-visible" id="overlay" role="dialog" aria-modal="true" aria-live="polite">
+          <h1 id="overlayTitle">Luxury Snake</h1>
+          <p id="overlayText">Use Arrow Keys or WASD. Press Enter to start.</p>
+          <div class="overlay-actions">
+            <button id="primaryBtn" type="button">Start Game</button>
+            <button id="secondaryBtn" type="button" class="ghost">Pause</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="touch-hint" aria-hidden="true">Swipe on the board on touch devices</div>
+      <p class="sr-only" id="liveRegion" aria-live="polite"></p>
+    </main>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>
