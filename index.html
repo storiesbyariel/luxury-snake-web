@@ -21,7 +21,9 @@
         <div class="metric metric-state">
           <span class="label">State</span>
           <span class="value" id="state">Ready</span>
+          <span class="helper" id="stateHelper" hidden></span>
         </div>
+        <div class="metric metric-multiplier" id="multiplier" hidden aria-live="polite">x2</div>
       </header>
 
       <section class="board-wrap" id="boardWrap" aria-label="Game board">
@@ -38,7 +40,7 @@
         </div>
       </section>
 
-      <div class="touch-hint" aria-hidden="true">Swipe on the board on touch devices</div>
+      <div class="touch-hint" id="touchHint" aria-hidden="true" hidden>Swipe on the board on touch devices</div>
       <p class="sr-only" id="liveRegion" aria-live="polite"></p>
     </main>
 

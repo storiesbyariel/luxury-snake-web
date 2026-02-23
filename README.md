@@ -21,18 +21,23 @@ python3 -m http.server 8080
 - Menu / back: `Esc`
 - Touch: swipe on the board (min 24px, axis-locked)
 
-## Features in this pass
+## Features in this pass (Mini Release 2: Precision Pressure)
 
 - Canvas-rendered 24x24 board with DPR-aware scaling
-- Fixed-timestep game logic (10 ticks/sec) + smooth requestAnimationFrame rendering
+- Fixed-timestep game logic with gentle speed curve by score band (10 → 11 → 12 ticks/sec)
 - Reverse-direction guard and queued input
 - Subtle input acknowledgment on accepted turns + blocked reverse attempts
+- **Timed Gold Fruit**: occasional +3 target with visible expiry ring and soft gold treatment
+- **Streak Multiplier**: short chain window that can ramp scoring to `x3` (`x1` resets on timeout/death)
 - Food spawning on empty cells, growth, score tracking
 - Wall/self collision and game-over flow
-- State-aware overlays for Ready / Playing / Paused / Game Over
-- Minimal luxury HUD (Score, Best, State) with user-facing state labels
+- State-aware overlays for Ready / Playing / Paused / Game Over, including concise run summary line
+- Minimal luxury HUD (Score, Best, State + transient helper + active multiplier chip)
+- Contextual touch hint lifecycle (coarse pointer only, auto-dismisses after first successful swipe)
+- Tasteful snake head direction cue for faster recognition at speed
+- Mobile grid alpha tuning at `<=480px` to preserve focal hierarchy
 - `localStorage` persistence for best score (`luxury-snake-best`)
-- Responsive layout and HUD readability tuned for narrow width (including ~320px)
+- Responsive layout and readability tuned for narrow width (including ~320px)
 - `prefers-reduced-motion` respected for UI transitions
 
 ## UX instrumentation (devtools)
@@ -70,22 +75,31 @@ Because paths are relative (`./css/style.css`, `./js/main.js`), hosting from rep
 
 ## Manual smoke-check checklist
 
-### Desktop (about 2 minutes)
+### Desktop (about 2–3 minutes)
 
-1. Load page: Ready overlay has one clear primary CTA (**Start Game**) and quiet control hint.
-2. Press `Enter`: game starts, HUD state shows **Playing**.
-3. Press rapid valid direction changes: notice subtle head acknowledgment.
-4. Try immediate reverse direction: move is blocked with subtle non-intrusive feedback.
-5. Press `Space`: pause overlay appears with valid actions only (**Resume**, **Quit to Menu**).
-6. End game by collision: **Game Over** overlay appears with **Play Again** + **Quit to Menu**.
-7. Press `Enter` on Game Over: restart is immediate and logs restart latency in console.
+1. Load page: Ready overlay has one clear primary CTA (**Start Game**) and concise hint.
+2. Press `Enter`: game starts, HUD state shows **Playing** and helper copy clears automatically.
+3. Collect 2–3 fruits in quick succession: verify multiplier chip appears (`x2`/`x3`) and score gain increases.
+4. Wait >4 seconds before next fruit: verify multiplier resets cleanly to `x1` (chip disappears).
+5. Keep playing ~20–30 seconds: verify gold fruit appears, has subtle distinct styling, and expiry ring counts down.
+6. Let gold fruit expire once: verify it disappears and game continues normally; then collect one gold fruit in a later spawn and confirm higher score gain.
+7. Press `Space`: pause overlay appears with valid actions only (**Resume**, **Quit to Menu**).
+8. End game by collision: **Game Over** overlay shows score/best plus concise run summary line.
+9. Press `Enter` on Game Over: restart is immediate and logs restart latency in console.
+
+### Mobile / coarse pointer
+
+1. Open on a touch device or simulator with coarse pointer enabled.
+2. Confirm touch hint is shown initially.
+3. Perform one successful swipe direction input on the board.
+4. Confirm touch hint auto-dismisses and stays hidden for the rest of the session.
 
 ### Narrow viewport (~320px)
 
-1. Set responsive width to ~320px.
-2. Verify Score / Best / State remain readable with no clipping or overlap.
-3. Confirm board remains dominant visual element and fully playable.
-4. Verify overlay copy and CTA remain readable and centered.
+1. Set responsive width to ~320px (and <=480px at least once).
+2. Verify Score / Best / State / helper remain readable with no clipping.
+3. Confirm grid lines are quieter at <=480px while board remains readable.
+4. Verify snake head direction cue remains visible but subtle at speed.
 
 ## Next polish ideas
 
