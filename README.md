@@ -32,6 +32,7 @@ python3 -m http.server 8080
 - Food spawning on empty cells, growth, score tracking
 - Wall/self collision and game-over flow
 - State-aware overlays for Ready / Playing / Paused / Game Over, including concise run summary line
+- Refined visual polish pass: layered board ambience, smoother overlay easing, and subtler HUD typography rhythm
 - Minimal luxury HUD (Score, Best, State + transient helper + active multiplier chip)
 - Contextual touch hint lifecycle (coarse pointer only, auto-dismisses after first successful swipe)
 - Tasteful snake head direction cue for faster recognition at speed

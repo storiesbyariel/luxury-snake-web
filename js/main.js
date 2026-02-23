@@ -8,6 +8,8 @@ const CONFIG = {
     { score: 28, tickRate: 12 }
   ],
   boardColor: '#141923',
+  boardTintTop: 'rgba(212,175,55,0.045)',
+  boardTintBottom: 'rgba(255,255,255,0.03)',
   snakeBody: '#c4ccd8',
   snakeHead: '#f5f7fa',
   snakeHeadCue: 'rgba(20, 25, 35, 0.82)',
@@ -476,11 +478,27 @@ function drawHeadCue(headCell) {
   ctx.beginPath();
   ctx.arc(cx + ox, cy + oy, Math.max(1.5, cellPx * 0.08), 0, Math.PI * 2);
   ctx.fill();
+
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.shadowBlur = Math.max(6, cellPx * 0.3);
+  ctx.shadowColor = 'rgba(245,247,250,0.5)';
+  ctx.beginPath();
+  ctx.arc(cx, cy, Math.max(3.5, cellPx * 0.18), 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(245,247,250,0.42)';
+  ctx.fill();
+  ctx.restore();
 }
 
 function render(interp) {
   ctx.clearRect(0, 0, boardPx, boardPx);
   ctx.fillStyle = CONFIG.boardColor;
+  ctx.fillRect(0, 0, boardPx, boardPx);
+
+  const boardGrad = ctx.createLinearGradient(0, 0, 0, boardPx);
+  boardGrad.addColorStop(0, CONFIG.boardTintTop);
+  boardGrad.addColorStop(1, CONFIG.boardTintBottom);
+  ctx.fillStyle = boardGrad;
   ctx.fillRect(0, 0, boardPx, boardPx);
 
   ctx.strokeStyle = state.gridLineColor;
@@ -495,6 +513,7 @@ function render(interp) {
   const isGold = state.food.kind === 'gold';
   const foodColor = isGold ? CONFIG.goldFoodColor : CONFIG.foodColor;
   const foodGlow = isGold ? CONFIG.goldFoodGlow : CONFIG.foodGlow;
+  const foodPhase = (nowMs() % 1200) / 1200;
 
   ctx.save();
   ctx.translate((state.food.x + 0.5) * cellPx, (state.food.y + 0.5) * cellPx);
@@ -503,6 +522,18 @@ function render(interp) {
   ctx.shadowBlur = isGold ? 22 : 16;
   ctx.shadowColor = foodGlow;
   drawCell(state.food, foodColor, 0.5);
+  ctx.restore();
+
+  ctx.save();
+  const foodCx = (state.food.x + 0.5) * cellPx;
+  const foodCy = (state.food.y + 0.5) * cellPx;
+  const haloRadius = cellPx * (0.34 + foodPhase * 0.18);
+  ctx.globalAlpha = isGold ? 0.24 * (1 - foodPhase) : 0.14 * (1 - foodPhase);
+  ctx.strokeStyle = isGold ? 'rgba(242,214,122,0.9)' : 'rgba(212,175,55,0.75)';
+  ctx.lineWidth = Math.max(1, cellPx * 0.045);
+  ctx.beginPath();
+  ctx.arc(foodCx, foodCy, haloRadius, 0, Math.PI * 2);
+  ctx.stroke();
   ctx.restore();
 
   if (isGold && state.goldExpiresAt > 0) {
