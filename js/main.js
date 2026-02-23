@@ -18,6 +18,12 @@ const DIRS = {
 };
 
 const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
+const PHASE_LABELS = {
+  idle: 'Ready',
+  running: 'Playing',
+  paused: 'Paused',
+  gameover: 'Game Over'
+};
 
 const state = {
   phase: 'idle',
@@ -30,7 +36,15 @@ const state = {
   best: Number(localStorage.getItem(CONFIG.storageKeyBest) || 0),
   impactFlashMs: 0,
   foodPulseMs: 0,
-  justAte: false
+  inputPulseMs: 0,
+  blockedPulseMs: 0,
+  justAte: false,
+  metrics: {
+    ttfpStartAt: null,
+    restartStartAt: null,
+    ttfpPending: false,
+    restartPending: false
+  }
 };
 
 const el = {
@@ -63,7 +77,7 @@ function announce(msg) {
 
 function setPhase(phase) {
   state.phase = phase;
-  el.state.textContent = phase[0].toUpperCase() + phase.slice(1);
+  el.state.textContent = PHASE_LABELS[phase] || 'Ready';
 }
 
 function resetGame() {
@@ -79,6 +93,8 @@ function resetGame() {
   state.score = 0;
   state.impactFlashMs = 0;
   state.foodPulseMs = 0;
+  state.inputPulseMs = 0;
+  state.blockedPulseMs = 0;
   state.justAte = false;
   spawnFood();
   syncHud();
@@ -89,11 +105,18 @@ function syncHud() {
   el.best.textContent = String(state.best);
 }
 
-function openOverlay(title, text, primaryLabel, secondaryLabel = 'Quit to Menu') {
+function openOverlay({ title, text, primaryLabel, secondaryLabel = '', showSecondary = false }) {
   el.overlayTitle.textContent = title;
   el.overlayText.textContent = text;
   el.primaryBtn.textContent = primaryLabel;
-  el.secondaryBtn.textContent = secondaryLabel;
+
+  if (showSecondary && secondaryLabel) {
+    el.secondaryBtn.textContent = secondaryLabel;
+    el.secondaryBtn.hidden = false;
+  } else {
+    el.secondaryBtn.hidden = true;
+  }
+
   el.overlay.classList.add('is-visible');
   el.primaryBtn.focus();
 }
@@ -104,7 +127,17 @@ function hideOverlay() {
 
 function startGame() {
   if (state.phase === 'running') return;
-  if (state.phase === 'idle' || state.phase === 'gameover') resetGame();
+
+  if (state.phase === 'idle') {
+    resetGame();
+    state.metrics.ttfpStartAt = performance.now();
+    state.metrics.ttfpPending = true;
+  } else if (state.phase === 'gameover') {
+    state.metrics.restartStartAt = performance.now();
+    state.metrics.restartPending = true;
+    resetGame();
+  }
+
   setPhase('running');
   hideOverlay();
   announce('Game started');
@@ -113,7 +146,13 @@ function startGame() {
 function pauseGame() {
   if (state.phase !== 'running') return;
   setPhase('paused');
-  openOverlay('Paused', 'Press Space or Resume to continue.', 'Resume', 'Quit to Menu');
+  openOverlay({
+    title: 'Paused',
+    text: 'Take a breath. Press Space to continue.',
+    primaryLabel: 'Resume',
+    secondaryLabel: 'Quit to Menu',
+    showSecondary: true
+  });
   announce('Paused');
 }
 
@@ -133,15 +172,28 @@ function endGame() {
   }
   syncHud();
   const newBest = state.score === state.best && state.score > 0 ? ' New best.' : '';
-  openOverlay('Game Over', `Score ${state.score}. Best ${state.best}.${newBest}`, 'Play Again', 'Quit to Menu');
+  openOverlay({
+    title: 'Game Over',
+    text: `Score ${state.score}. Best ${state.best}.${newBest}`,
+    primaryLabel: 'Play Again',
+    secondaryLabel: 'Quit to Menu',
+    showSecondary: true
+  });
   announce(`Game over. Score ${state.score}. Best ${state.best}.`);
 }
 
 function queueDirection(next) {
   if (state.phase !== 'running') return;
   const last = state.nextDirections[state.nextDirections.length - 1] || state.direction;
-  if (next === last || OPPOSITE[last] === next) return;
+  if (next === last) return;
+
+  if (OPPOSITE[last] === next) {
+    state.blockedPulseMs = 90;
+    return;
+  }
+
   state.nextDirections.push(next);
+  state.inputPulseMs = 110;
 }
 
 function keyToDir(key) {
@@ -173,6 +225,25 @@ function spawnFood() {
 
 function inBounds(p) {
   return p.x >= 0 && p.y >= 0 && p.x < CONFIG.gridSize && p.y < CONFIG.gridSize;
+}
+
+function commitUxMetricsIfPending() {
+  if (state.metrics.ttfpPending && state.metrics.ttfpStartAt !== null) {
+    const ms = performance.now() - state.metrics.ttfpStartAt;
+    state.metrics.ttfpPending = false;
+    performance.mark('snake:first-play');
+    performance.measure('snake:ttfp', {
+      start: 'snake:init',
+      end: 'snake:first-play'
+    });
+    console.info(`[UX] Time-to-first-play: ${ms.toFixed(1)}ms`);
+  }
+
+  if (state.metrics.restartPending && state.metrics.restartStartAt !== null) {
+    const ms = performance.now() - state.metrics.restartStartAt;
+    state.metrics.restartPending = false;
+    console.info(`[UX] Restart latency: ${ms.toFixed(1)}ms`);
+  }
 }
 
 function update() {
@@ -207,6 +278,8 @@ function update() {
     state.snake.pop();
     state.justAte = false;
   }
+
+  commitUxMetricsIfPending();
 }
 
 function lerp(a, b, t) {
@@ -248,6 +321,9 @@ function render(interp) {
   drawCell(state.food, CONFIG.foodColor, 0.5);
   ctx.restore();
 
+  const acceptedStrength = state.inputPulseMs > 0 ? state.inputPulseMs / 110 : 0;
+  const blockedStrength = state.blockedPulseMs > 0 ? state.blockedPulseMs / 90 : 0;
+
   for (let i = state.snake.length - 1; i >= 0; i--) {
     const curr = state.snake[i];
     const prev = state.previousSnake[i] || curr;
@@ -255,7 +331,13 @@ function render(interp) {
       x: lerp(prev.x, curr.x, interp),
       y: lerp(prev.y, curr.y, interp)
     };
-    drawCell(cell, i === 0 ? CONFIG.snakeHead : CONFIG.snakeBody, i === 0 ? 0.36 : 0.24);
+
+    const isHead = i === 0;
+    let alpha = 1;
+    if (isHead && acceptedStrength > 0) alpha = 1 - acceptedStrength * 0.12;
+    if (isHead && blockedStrength > 0) alpha = 1 - blockedStrength * 0.2;
+
+    drawCell(cell, isHead ? CONFIG.snakeHead : CONFIG.snakeBody, isHead ? 0.36 : 0.24, alpha);
   }
 
   if (state.impactFlashMs > 0) {
@@ -276,6 +358,8 @@ function frame(ts) {
 
   if (state.foodPulseMs > 0) state.foodPulseMs = Math.max(0, state.foodPulseMs - dt);
   if (state.impactFlashMs > 0) state.impactFlashMs = Math.max(0, state.impactFlashMs - dt);
+  if (state.inputPulseMs > 0) state.inputPulseMs = Math.max(0, state.inputPulseMs - dt);
+  if (state.blockedPulseMs > 0) state.blockedPulseMs = Math.max(0, state.blockedPulseMs - dt);
 
   render(accumulator / stepMs);
   requestAnimationFrame(frame);
@@ -296,7 +380,12 @@ function resizeCanvas() {
 
 function quitToMenu() {
   setPhase('idle');
-  openOverlay('Luxury Snake', 'Use Arrow Keys or WASD. Press Enter to start.', 'Start Game', 'Pause');
+  openOverlay({
+    title: 'Luxury Snake',
+    text: 'Arrow keys or WASD to move.',
+    primaryLabel: 'Start Game',
+    showSecondary: false
+  });
   announce('Ready');
 }
 
@@ -363,10 +452,16 @@ function setupInput() {
 }
 
 function init() {
+  performance.mark('snake:init');
   resetGame();
   syncHud();
   setPhase('idle');
-  openOverlay('Luxury Snake', 'Use Arrow Keys or WASD. Press Enter to start.', 'Start Game', 'Pause');
+  openOverlay({
+    title: 'Luxury Snake',
+    text: 'Arrow keys or WASD to move.',
+    primaryLabel: 'Start Game',
+    showSecondary: false
+  });
   resizeCanvas();
   setupInput();
   requestAnimationFrame(frame);

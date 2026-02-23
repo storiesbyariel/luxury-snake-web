@@ -57,6 +57,7 @@ body {
 }
 
 .metric {
+  min-width: 0;
   background: color-mix(in srgb, var(--surface-elev) 88%, transparent);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
@@ -66,15 +67,22 @@ body {
 
 .label {
   display: block;
-  font-size: 12px;
-  letter-spacing: 0.3px;
+  font-size: 11px;
+  letter-spacing: 0.36px;
   color: var(--text-secondary);
   text-transform: uppercase;
 }
 
 .value {
-  font-size: clamp(18px, 2.8vw, 24px);
+  display: block;
+  min-width: 0;
+  font-size: clamp(17px, 2.6vw, 22px);
   font-weight: 600;
+  line-height: 1.12;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .metric-state .value { color: var(--accent); }
@@ -104,7 +112,7 @@ canvas {
   display: grid;
   place-content: center;
   text-align: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   padding: var(--space-6);
   background: color-mix(in srgb, var(--surface) 74%, #000 26%);
   opacity: 0;
@@ -120,7 +128,7 @@ canvas {
 }
 
 .overlay h1 {
-  margin: 0;
+  margin: 0 0 var(--space-1);
   font-size: clamp(28px, 4vw, 36px);
   line-height: 1.05;
 }
@@ -130,7 +138,19 @@ canvas {
   color: var(--text-secondary);
 }
 
-.overlay-actions { display: flex; gap: var(--space-2); justify-content: center; flex-wrap: wrap; }
+.overlay-hint {
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  opacity: 0.82;
+}
+
+.overlay-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+}
 
 button {
   min-width: 132px;
@@ -159,9 +179,14 @@ button:focus-visible {
 }
 
 .touch-hint {
+  display: none;
   text-align: center;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 12px;
+}
+
+@media (pointer: coarse) {
+  .touch-hint { display: block; }
 }
 
 .sr-only {
@@ -181,6 +206,15 @@ button:focus-visible {
   .hud { grid-template-columns: 1fr 1fr; }
   .metric-state { grid-column: 1 / -1; }
   .board-wrap { width: 100%; }
+}
+
+@media (max-width: 380px) {
+  .app { gap: var(--space-3); }
+  .metric { padding: 7px 10px; }
+  .label { font-size: 10px; }
+  .value { font-size: 16px; }
+  .overlay { padding: var(--space-4); }
+  .overlay-hint { font-size: 11px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
