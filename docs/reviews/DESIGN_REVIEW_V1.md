@@ -2,7 +2,7 @@
 
 ## Scope reviewed
 - Current implementation in `index.html`, `css/style.css`, `js/main.js`
-- Product target from `UX_BRIEF_LUXURY_SNAKE.md`
+- Product target from `../prd/UX_BRIEF_LUXURY_SNAKE.md`
 - Baseline commit in repo is `de79b29` (current main state at review time)
 
 ---

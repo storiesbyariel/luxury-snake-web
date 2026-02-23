@@ -70,6 +70,21 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the agent role matrix and PR/revi
 
 Key rule: **QA files issues only** (no QA report/code pushes to `main`).
 
+## Documentation map
+
+Planning and review docs are consolidated under `docs/`:
+
+- PRD / planning: [`docs/prd/`](./docs/prd/)
+  - [`WEB_SNAKE_PLAN.md`](./docs/prd/WEB_SNAKE_PLAN.md)
+  - [`TASKS.md`](./docs/prd/TASKS.md)
+  - [`UX_BRIEF_LUXURY_SNAKE.md`](./docs/prd/UX_BRIEF_LUXURY_SNAKE.md)
+- Strategy: [`docs/strategy/`](./docs/strategy/)
+  - [`UX_RELEASE_STRATEGY.md`](./docs/strategy/UX_RELEASE_STRATEGY.md)
+- Reviews: [`docs/reviews/`](./docs/reviews/)
+  - [`DESIGN_REVIEW_V1.md`](./docs/reviews/DESIGN_REVIEW_V1.md)
+  - [`DESIGN_REVIEW_V2.md`](./docs/reviews/DESIGN_REVIEW_V2.md)
+  - [`GAME_THEORY_REVIEW.md`](./docs/reviews/GAME_THEORY_REVIEW.md)
+
 ## GitHub Pages deployment (root)
 
 1. Push this repository to GitHub.
