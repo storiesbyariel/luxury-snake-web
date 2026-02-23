@@ -281,6 +281,27 @@ function endGame() {
   announce(`Game over. Score ${state.score}. Best ${state.best}.`);
 }
 
+function endWin() {
+  setPhase('gameover');
+  if (state.score > state.best) {
+    state.best = state.score;
+    localStorage.setItem(CONFIG.storageKeyBest, String(state.best));
+  }
+  state.runSummary = `Board filled at length ${state.snake.length}.`;
+  resetStreak();
+  syncHud();
+  openOverlay({
+    title: 'Perfect Run',
+    text: `You filled the board. Score ${state.score}. Best ${state.best}.`,
+    summary: state.runSummary,
+    primaryLabel: 'Play Again',
+    secondaryLabel: 'Quit to Menu',
+    showSecondary: true
+  });
+  hideHelper();
+  announce(`Perfect run. Score ${state.score}. Board filled.`);
+}
+
 function queueDirection(next, source = 'keyboard') {
   if (state.phase !== 'running') return false;
   const last = state.nextDirections[state.nextDirections.length - 1] || state.direction;
@@ -318,7 +339,6 @@ function keyToDir(key) {
 
 function spawnFood(kind = 'normal') {
   const occupied = new Set(state.snake.map((s) => `${s.x},${s.y}`));
-  if (state.food && state.food.x !== undefined) occupied.add(`${state.food.x},${state.food.y}`);
 
   const free = [];
   for (let y = 0; y < CONFIG.gridSize; y++) {
@@ -328,12 +348,18 @@ function spawnFood(kind = 'normal') {
     }
   }
 
-  const slot = free[Math.floor(Math.random() * free.length)] || { x: 0, y: 0 };
+  if (free.length === 0) {
+    state.goldExpiresAt = 0;
+    return false;
+  }
+
+  const slot = free[Math.floor(Math.random() * free.length)];
   state.food = { ...slot, kind };
   if (kind === 'gold') state.goldExpiresAt = nowMs() + CONFIG.goldLifetimeMs;
   else state.goldExpiresAt = 0;
 
   state.foodPulseMs = 120;
+  return true;
 }
 
 function maybeSpawnGold() {
@@ -341,7 +367,11 @@ function maybeSpawnGold() {
   if (state.food.kind === 'gold') return;
   if (nowMs() < state.nextGoldSpawnAt) return;
 
-  spawnFood('gold');
+  if (!spawnFood('gold')) {
+    endWin();
+    return;
+  }
+
   showHelper('Risk window open', 1700);
   announce('Gold fruit appeared.');
 }
@@ -411,31 +441,42 @@ function update() {
   const v = DIRS[state.direction];
   const head = state.snake[0];
   const newHead = { x: head.x + v.x, y: head.y + v.y };
+  const ate = newHead.x === state.food.x && newHead.y === state.food.y;
 
   if (!inBounds(newHead)) {
     endGame();
     return;
   }
 
-  const hitsSelf = state.snake.some((seg) => seg.x === newHead.x && seg.y === newHead.y);
+  const bodyToCheck = ate ? state.snake : state.snake.slice(0, -1);
+  const hitsSelf = bodyToCheck.some((seg) => seg.x === newHead.x && seg.y === newHead.y);
   if (hitsSelf) {
     endGame();
     return;
   }
 
   state.snake.unshift(newHead);
-  const ate = newHead.x === state.food.x && newHead.y === state.food.y;
   if (ate) {
     const isGold = state.food.kind === 'gold';
     applyScoreForPickup(isGold ? 3 : 1);
     state.justAte = true;
+
+    if (state.snake.length >= CONFIG.gridSize * CONFIG.gridSize) {
+      endWin();
+      commitUxMetricsIfPending();
+      return;
+    }
 
     if (isGold) {
       state.nextGoldSpawnAt = nextGoldSpawnTime();
       showHelper('High-value secured', 1300);
     }
 
-    spawnFood('normal');
+    if (!spawnFood('normal')) {
+      endWin();
+      commitUxMetricsIfPending();
+      return;
+    }
   } else {
     state.snake.pop();
     state.justAte = false;

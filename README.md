@@ -63,6 +63,14 @@ Target guidance from release strategy:
 - TTFP median target: `<= 5000ms` (stretch `<= 3500ms`)
 - Restart latency target: `<= 400ms`
 
+## QA contribution guardrail
+
+QA contributors should file findings as GitHub issues only.
+
+- Do **not** push QA report files (for example `QA_REPORT.md`) to `main`.
+- Do **not** push QA fix/code commits from QA-role runs.
+- Link evidence, repro steps, and expected behavior in issues so implementation can be tracked and reviewed.
+
 ## GitHub Pages deployment (root)
 
 1. Push this repository to GitHub.
@@ -86,6 +94,8 @@ Because paths are relative (`./css/style.css`, `./js/main.js`), hosting from rep
 7. Press `Space`: pause overlay appears with valid actions only (**Resume**, **Quit to Menu**).
 8. End game by collision: **Game Over** overlay shows score/best plus concise run summary line.
 9. Press `Enter` on Game Over: restart is immediate and logs restart latency in console.
+10. Tail-vacate case: create a tight loop and move into the cell the tail is leaving on that same tick; verify no false self-collision.
+11. Near-full board case: continue until board is full; verify game ends as a win state (`Perfect Run`) and no food spawns onto occupied cells.
 
 ### Mobile / coarse pointer
 
